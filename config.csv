@@ -1,0 +1,4 @@
+﻿dop dop
+vfs_zip vfs.zip
+log_file log.csv
+start_script start.sh
