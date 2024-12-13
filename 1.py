@@ -72,7 +72,7 @@ class ShellEmulator:
     def tail_file(self, filename):
         with self.fs.open(filename) as f:
             lines = f.readlines()
-            self.display_output('tail\n'+"".join(lines[-10:]))  # Показать последние 10 строк
+            self.display_output('tail\n'+"".join(lines[-10:]))
 
     def display_output(self, output):
         self.log(output)

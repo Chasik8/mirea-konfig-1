@@ -7,12 +7,6 @@ import pytest
 
 
 def get_commit_dependencies(repo_path, since_date):
-    """
-    Get the dependencies for commits in a Git repository since a specific date.
-    :param repo_path: Path to the Git repository.
-    :param since_date: Date from which to include commits.
-    :return: Dictionary where keys are commit hashes, and values are lists of file paths in the commit.
-    """
     command = [
         'git', '-C', repo_path, 'log', '--name-only', '--pretty=format:%H', f'--since={since_date}'
     ]
@@ -37,11 +31,6 @@ def get_commit_dependencies(repo_path, since_date):
 
 
 def build_graphviz_graph(dependencies, output_file):
-    """
-    Build a Graphviz graph for the dependencies and save as PNG.
-    :param dependencies: Dictionary of dependencies.
-    :param output_file: Path to save the output PNG file.
-    """
     graph = Digraph(format='png')
 
     for commit, files in dependencies.items():
@@ -63,13 +52,11 @@ def main():
 
     args = parser.parse_args()
 
-    # Validate input date
     try:
         datetime.strptime(args.since_date, '%Y-%m-%d')
     except ValueError:
         raise ValueError("Invalid date format. Use YYYY-MM-DD.")
 
-    # Process dependencies and build graph
     dependencies = get_commit_dependencies(args.repo_path, args.since_date)
     build_graphviz_graph(dependencies, args.output_file)
 
