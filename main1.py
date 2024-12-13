@@ -25,11 +25,10 @@ class ShellEmulator:
         return config
 
     def load_virtual_filesystem(self):
-        """ Загрузка виртуальной файловой системы из zip-архива """
         self.fs = zipfile.ZipFile(self.fs_zip_path, 'r')
 
     def execute_command(self, command):
-        """ Выполнение команды в эмуляторе """
+        command = command.split('> ')[1]
         if command == "exit":
             self.exit_emulator()
         elif command.startswith("cd "):
@@ -46,7 +45,6 @@ class ShellEmulator:
             self.log(f"Неизвестная команда: {command}")
 
     def list_directory(self):
-        """ Команда ls - показать список файлов """
         files = []
         for f in self.fs.namelist():
             if f[:len(self.current_path[1:])] == self.current_path[1:]:
@@ -58,8 +56,6 @@ class ShellEmulator:
         self.display_output("ls\n" + "\n".join(files))
 
     def change_directory(self, path):
-        """ Команда cd - смена директории """
-        print(self.fs.namelist())
         if path == "..":
             self.current_path = '/'.join(self.current_path.split('/')[:-2])
         elif path + "/" in self.fs.namelist():
@@ -67,57 +63,52 @@ class ShellEmulator:
         self.display_output(f"cd\nТекущий путь: {self.current_path}")
 
     def show_user(self):
-        """ Команда who - вывод информации о пользователе """
         self.display_output(f"who\nПользователь: user")
 
     def change_permissions(self, permissions):
-        """ Команда chmod - изменение прав доступа """
         self.display_output(
             f"chmod\nПрава доступа изменены на {list(permissions.split())[0]} для файла {self.current_path}{list(permissions.split())[1]}")
 
     def tail_file(self, filename):
-        """ Команда tail - вывод последних строк файла """
         with self.fs.open(filename) as f:
             lines = f.readlines()
             self.display_output('tail\n'+"".join(lines[-10:]))  # Показать последние 10 строк
 
     def display_output(self, output):
-        """ Вывод результата на экран и логирование """
         self.log(output)
         output = "\n".join(list(output.split('\n')[1:]))
-        self.text_widget.insert(tk.END, output + "\n")
+        self.text_widget.config(state=tk.NORMAL)
+        self.text_widget.insert(tk.END, self.current_path + "> " + output + "\n")
+        self.text_widget.config(state=tk.DISABLED)
         self.text_widget.yview(tk.END)
 
     def log(self, message):
-        """ Логирование действия в файл """
         with open(self.log_file, 'a', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow([message])
 
     def exit_emulator(self):
-        """ Завершение работы эмулятора """
         self.root.quit()
 
     def run(self):
-        """ Запуск GUI """
         self.root = tk.Tk()
         self.root.title("Shell Emulator")
 
-        self.text_widget = tk.Text(self.root, height=20, width=80)
+        self.text_widget = tk.Text(self.root, height=20, width=80, state=tk.DISABLED)
         self.text_widget.pack(pady=10)
 
         self.entry = ttk.Entry(self.root, width=80)
         self.entry.pack(pady=5)
+        self.entry.insert(0, f"{self.current_path}> ")
         self.entry.bind('<Return>', self.on_enter)
 
         self.root.mainloop()
 
     def on_enter(self, event):
-        """ Обработка ввода команды """
         command = self.entry.get()
         self.execute_command(command)
         self.entry.delete(0, tk.END)
-
+        self.entry.insert(0, f"{self.current_path}> ")
 
 if __name__ == "__main__":
     emulator = ShellEmulator('config.csv')
